@@ -2,8 +2,7 @@
 #
 # original:    https://github.com/yukuku/telebot
 # modified by: Bak Yeon O @ https://bakyeono.net
-# description: https://bakyeono.net/post/2015-08-24-using-telegram-bot-api.html
-# github:      https://github.com/bakyeono/using-telegram-bot-api
+# second-modified by : https://blog.naver.com/jh0shin2004
 #
 
 # 구글 앱 엔진 라이브러리 로드
@@ -17,6 +16,7 @@ import urllib2
 import json
 import logging
 import re
+import requests
 
 # 봇 토큰, 봇 API 주소
 TOKEN = '433414683:AAH8NeehDiBBEcE8p8Yzi0OYhI6Iaav8kbs'
@@ -26,6 +26,7 @@ BASE_URL = 'https://api.telegram.org/bot' + TOKEN + '/'
 CMD_START     = '/start'
 CMD_STOP      = '/stop'
 CMD_HELP      = '/help'
+CMD_MARKETCAP = '/marketcap'
 CMD_BROADCAST = '/broadcast'
 
 # 봇 사용법 & 메시지
@@ -33,6 +34,7 @@ USAGE = u"""[사용법] 아래 명령어를 메시지로 보내거나 버튼을 
 /start - (봇 활성화)
 /stop  - (봇 비활성화)
 /help  - (이 도움말 보여주기)
+/marketcap - (시가총액 확인하기)
 """
 MSG_START = u'봇을 시작합니다.'
 MSG_STOP  = u'봇을 정지합니다.'
@@ -150,6 +152,22 @@ def cmd_echo(chat_id, text, reply_to):
     """
     send_msg(chat_id, text, reply_to=reply_to)
 
+def cmd_marketcap(chat_id):
+    u"""cmd_marketcap: 가상화폐 시가 총액 메세지 발송
+    chat_id: (integer) 채팅 ID
+    text:    (string)  방송할 메시지
+    """   
+    marketcap_r = requests.get('https://api.coinmarketcap.com/v1/global/', auth=('user', 'pass'))
+    marketcap_json = marketcap_r.json()
+
+    mc_text =   u"현재 시가총액(달러) : " + format(int(j['total_market_cap_usd']), ",") + " $\n"
+                + "24시간동안의 거래량 : " + format(int(j['total_24h_volume_usd']), ",") + " $\n"
+                + "시가총액 중 비트코인의 비율 : " + format(int(j['bitcoin_percentage_of_market_cap']), ",") + " $\n"
+
+    send_msg(chat_id, mc_text)
+
+def numerate
+
 def process_cmds(msg):
     u"""사용자 메시지를 분석해 봇 명령을 처리
     chat_id: (integer) 채팅 ID
@@ -170,6 +188,9 @@ def process_cmds(msg):
         return
     if CMD_HELP == text:
         cmd_help(chat_id)
+        return
+    if CMD_MARKETCAP == text:
+        cmd_marketcap(chat_id)
         return
     cmd_broadcast_match = re.match('^' + CMD_BROADCAST + ' (.*)', text)
     if cmd_broadcast_match:
